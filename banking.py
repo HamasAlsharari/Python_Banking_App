@@ -29,11 +29,52 @@ class Customer:
     def __str__(self):
         return f"{self.account_id} - {self.first_name} {self.last_name}"
 
-# Demo
+    
+    
+# BankSystem
+class BankSystem:
+    def __init__(self, filename="bank.csv"):
+        self.filename = filename
+        self.customers = {}
+        self.load()
+
+    def load(self):
+        self.customers = {}
+        try:
+            with open(self.filename, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    acct_id = row["id"]
+                    first = row["first_name"]
+                    last = row["last_name"]
+                    pw = row["password"]
+
+                    try:
+                        checking_bal = float(row.get("checking", 0))
+                    except (ValueError, TypeError):
+                        checking_bal = 0.0
+
+                    try:
+                        savings_bal = float(row.get("savings", 0))
+                    except (ValueError, TypeError):
+                        savings_bal = 0.0
+
+                    active = row.get("active", "True") == "True"
+                    try:
+                        overdrafts = int(row.get("overdraft_count", 0))
+                    except (ValueError, TypeError):
+                        overdrafts = 0
+
+                    cust = Customer(acct_id, first, last, pw, checking_bal, savings_bal, active, overdrafts)
+                    self.customers[acct_id] = cust
+        except FileNotFoundError:
+            print(f"{self.filename} not found. Please create it first.")
+
+    def list_customers(self):
+        for c in self.customers.values():
+            print(c)
+
+# demo
 if __name__ == "__main__":
-    demo = Customer("10001", "William", "Hartnell", "4fg56", 100, 500, True, 0)
-    print(demo)
-    print(demo.checking)
-    print(demo.savings)
-
-
+    bank = BankSystem("bank.csv")
+    bank.list_customers()
