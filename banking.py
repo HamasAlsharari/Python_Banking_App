@@ -30,7 +30,6 @@ class Customer:
         return f"{self.account_id} - {self.first_name} {self.last_name}"
 
     
-    
 # BankSystem
 class BankSystem:
     def __init__(self, filename="bank.csv"):
@@ -74,6 +73,7 @@ class BankSystem:
         for c in self.customers.values():
             print(c)
 
+
 # add customer
     def add_customer(self, account_id, first_name, last_name, password, checking=0.0, savings=0.0,
                     active=True, overdraft_count=0):
@@ -105,8 +105,45 @@ class BankSystem:
         print(f"✅ Customer {first_name} {last_name} added successfully!")
         return new_cust
 
-# demo
+
+
+# authenticate, deposit, withdraw
+    def authenticate(self, account_id, password):
+        cust = self.customers.get(account_id)
+        if cust and cust.password == password:
+            print(f"✅ Welcome {cust.first_name} {cust.last_name}")
+            return cust
+        print("❌ Invalid credentials")
+        return None
+
+    def deposit(self, cust, account_type, amount):
+        if amount <= 0:
+            print("❌ Deposit amount must be positive")
+            return
+        acct = cust.checking if account_type == "checking" else cust.savings
+        acct.balance += amount
+        print(f"✅ Deposited {amount} to {account_type}. New balance: {acct.balance}")
+
+    def withdraw(self, cust, account_type, amount):
+        acct = cust.checking if account_type == "checking" else cust.savings
+        if amount > 100:
+            print("❌ Cannot withdraw more than $100 at once")
+            return
+        if acct.balance - amount < -100:
+            print("❌ Withdrawal denied: balance cannot go below -100")
+            return 
+        acct.balance -= amount
+        if acct.balance < 0:
+            acct.balance -= 35
+            acct.overdraft_count += 1
+            if acct.overdraft_count >= 2:
+                acct.active = False
+        print(f"✅ Withdraw {amount} from {account_type}. New balance: {acct.balance}")
+
+# demo 
 if __name__ == "__main__":
     bank = BankSystem("bank.csv")
-    bank.add_customer("20002", "Hamas", "Alsharari", "H6h5m", 100, 50, True, 0)
-    bank.list_customers()
+    cust = bank.authenticate("20002", "H6h5m")
+    if cust:
+        bank.deposit(cust, "checking", 100)
+        bank.withdraw(cust, "checking", 50) 
