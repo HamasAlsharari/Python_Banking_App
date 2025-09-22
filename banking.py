@@ -74,7 +74,39 @@ class BankSystem:
         for c in self.customers.values():
             print(c)
 
+# add customer
+    def add_customer(self, account_id, first_name, last_name, password, checking=0.0, savings=0.0,
+                    active=True, overdraft_count=0):
+        if account_id in self.customers:
+           print("❌ Account ID already exists") 
+           return None
+
+        new_cust = Customer(account_id, first_name, last_name, password, checking, savings,
+                            active, overdraft_count)
+
+        with open(self.filename, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "id", "first_name", "last_name", "password", "checking", "savings",
+                "active", "overdraft_count"
+            ])
+            if f.tell() == 0:
+                writer.writeheader()
+            writer.writerow({
+                "id": account_id,
+                "first_name": first_name,
+                "last_name": last_name,
+                "password": password,
+                "checking": checking,
+                "savings": savings,
+                "active": active,
+                "overdraft_count": overdraft_count
+            })
+        self.customers[account_id] = new_cust
+        print(f"✅ Customer {first_name} {last_name} added successfully!")
+        return new_cust
+
 # demo
 if __name__ == "__main__":
     bank = BankSystem("bank.csv")
+    bank.add_customer("20002", "Hamas", "Alsharari", "H6h5m", 100, 50, True, 0)
     bank.list_customers()
