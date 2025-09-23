@@ -116,12 +116,23 @@ class BankSystem:
         print("❌ Invalid credentials")
         return None
 
+    def logout(self, cust):
+        print(f"✅ {cust.first_name} {cust.last_name} logged out")
+        cust = None
+        return cust
+
     def deposit(self, cust, account_type, amount):
         if amount <= 0:
             print("❌ Deposit amount must be positive")
             return
         acct = cust.checking if account_type == "checking" else cust.savings
         acct.balance += amount
+
+        if acct.balance >= 0 and not acct.active:
+            acct.active = True
+            acct.overdraft_count = 0
+            print(f"♻️ Account {account_type} reactivated!")
+
         print(f"✅ Deposited {amount} to {account_type}. New balance: {acct.balance}")
 
     def withdraw(self, cust, account_type, amount):
@@ -145,5 +156,10 @@ if __name__ == "__main__":
     bank = BankSystem("bank.csv")
     cust = bank.authenticate("20002", "H6h5m")
     if cust:
+        print("Current State:", cust.checking, cust.savings)
         bank.deposit(cust, "checking", 100)
-        bank.withdraw(cust, "checking", 50) 
+        print("After Deposit:", cust.checking, cust.savings)
+        bank.withdraw(cust, "checking", 50)
+        print("After Withdraw:", cust.checking, cust.savings)
+        cust = bank.logout(cust)
+        print("After Logout:", cust)
