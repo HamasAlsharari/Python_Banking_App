@@ -11,10 +11,60 @@ class Account:
         return f"Balance: {self.balance:.2f}, Active: {self.active}, Overdrafts: {self.overdraft_count}"
 
 class CheckingAccount(Account):
-        pass
+    def deposit(self, amount):
+        if amount <= 0:
+            print("❌ Deposit amount must be positive")
+            return
+        self.balance += amount
+        if self.balance >= 0 and not self.active:
+            self.active = True
+            self.overdraft_count = 0
+            print(f"♻️ Account reactivated!")
+        print(f"✅ Deposited {amount}. New balance: {self.balance}")
+
+    def withdraw(self, amount):
+        if amount > 100:
+            print("❌ Cannot withdraw more than $100 at once")
+            return
+        if self.balance - amount < -100:
+            print("❌ Withdrawal denied: balance cannot go below -100")
+            return
+        self.balance -= amount
+        if self.balance < 0:
+            self.balance -= 35
+            self.overdraft_count += 1
+            if self.overdraft_count >= 2:
+                self.active = False
+        print(f"✅ Withdraw {amount}. New balance: {self.balance}")
+
 
 class SavingsAccount(Account):
-        pass
+    def deposit(self, amount):
+        if amount <= 0:
+            print("❌ Deposit amount must be positive")
+            return
+        self.balance += amount
+        if self.balance >= 0 and not self.active:
+            self.active = True
+            self.overdraft_count = 0
+            print(f"♻️ Account reactivated!")
+        print(f"✅ Deposited {amount}. New balance: {self.balance}")
+
+    def withdraw(self, amount):
+        if amount > 100:
+           print("❌ Cannot withdraw more than $100 at once")
+           return
+        if self.balance - amount < -100:
+            print("❌ Withdrawal denied: balance cannot go below -100")
+            return
+        self.balance -= amount
+        if self.balance < 0:
+            self.balance -= 35
+            self.overdraft_count += 1
+            if self.overdraft_count >= 2:
+                self.active = False
+        print(f"✅ Withdraw {amount}. New balance: {self.balance}")
+
 
 class Customer:
     def __init__(self, account_id, first_name, last_name, password, checking_balance=0.0, savings_balance=0.0,
@@ -108,7 +158,7 @@ class BankSystem:
         return new_cust
 
 
-# authenticate, deposit, withdraw
+# authenticate, logout
     def authenticate(self, account_id, password):
         cust = self.customers.get(account_id)
         if cust and cust.password == password:
@@ -122,50 +172,29 @@ class BankSystem:
         cust = None
         return cust
 
-    def deposit(self, cust, account_type, amount):
-        if amount <= 0:
-            print("❌ Deposit amount must be positive")
-            return
-        acct = cust.checking if account_type == "checking" else cust.savings
-        acct.balance += amount
-
-        if acct.balance >= 0 and not acct.active:
-            acct.active = True
-            acct.overdraft_count = 0
-            print(f"♻️ Account {account_type} reactivated!")
-
-        print(f"✅ Deposited {amount} to {account_type}. New balance: {acct.balance}")
-
-    def withdraw(self, cust, account_type, amount):
-        acct = cust.checking if account_type == "checking" else cust.savings
-        if amount > 100:
-            print("❌ Cannot withdraw more than $100 at once")
-            return
-        if acct.balance - amount < -100:
-            print("❌ Withdrawal denied: balance cannot go below -100")
-            return 
-        acct.balance -= amount
-        if acct.balance < 0:
-            acct.balance -= 35
-            acct.overdraft_count += 1
-            if acct.overdraft_count >= 2:
-                acct.active = False
-        print(f"✅ Withdraw {amount} from {account_type}. New balance: {acct.balance}")
-
 # internal transfers
     def transfer_internal(self, cust, from_acc, to_acc, amount):
         if from_acc == to_acc:
-            print("❌ Cannot tranfer to the same account") 
+            print("❌ Cannot transfer to the same account") 
             return 
-        from_account = cust.checking if from_acc == "checking" else cust.savings
-        to_account = cust.checking if to_acc == "checking" else cust.savings
+
+        if from_acc == "checking":
+            from_account = cust.checking
+        else:
+            from_account = cust.savings
+
+        if to_acc == "checking":
+            to_account = cust.checking
+        else:
+            to_account = cust.savings
 
         if amount > from_account.balance + 100:
             print("❌ Not enough funds for this transfer")
             return 
-        
-        self.withdraw(cust, from_acc, amount)
-        self.deposit(cust, to_acc, amount)
+
+        from_account.withdraw(amount)
+        to_account.deposit(amount)
+        self.save()
         print(f"✅ Transferred {amount} from {from_acc} to {to_acc}")
 
 # external transfers
@@ -175,29 +204,94 @@ class BankSystem:
             print("❌ Destination account not found")
             return
 
-        from_account = from_cust.checking if from_acc == "checking" else from_cust.savings
+        if from_acc == "checking":
+            from_account = from_cust.checking
+        else:
+            from_account = from_cust.savings
+
+        if to_acc == "checking":
+            to_account = to_cust.checking
+        else:
+            to_account = to_cust.savings
 
         if amount > from_account.balance + 100:
             print("❌ Not enough funds for this transfer")
             return
 
-        self.withdraw(from_cust, from_acc, amount)
+        from_account.withdraw(amount)
 
         if not from_account.active:
             print(f"❌ Transfer canceled: {from_acc} account of {from_cust.account_id} is deactivated due to overdraft")
             return
 
-        self.deposit(to_cust, to_acc, amount)
+        to_account.deposit(amount)
+        self.save()
+        print(f"✅ Transferred {amount} from {from_cust.account_id} ({from_acc}) to {to_cust.account_id} ({to_acc})")
 
-        print(f"✅ Transferred {amount} from {from_cust.account_id} ({from_acc}) to {to_cust.account_id}({to_acc})")
-
-
+    
 if __name__ == "__main__":
     bank = BankSystem("bank.csv")
-    cust1 = bank.authenticate("20002", "H6h5m")
-    cust2 = bank.customers.get("10001")
-    if cust1 and cust2:
-        bank.transfer_external(cust1, "10001", "checking", "checking", 10)
-        bank.save()
-        print("Cust1 Checking:", cust1.checking.balance)
-        print("Cust2 Checking:", cust2.checking.balance)
+
+    print("Welcome to ACME Bank!")
+    have_account = input("Do you have an account? (yes/no): ").lower()
+
+    if have_account == "no":
+        print("Let's create your account.")
+        account_id = input("Enter a new account ID: ")
+        first_name = input("First Name: ")
+        last_name = input("Last Name: ")
+        password = input("Password: ")
+        checking = float(input("Initial Checking Balance (0 if none): "))
+        savings = float(input("Initial Savings Balance (0 if none): "))
+        bank.add_customer(account_id, first_name, last_name, password, checking, savings)
+
+    print("\n--- Login ---")
+    login_id = input("Enter your account ID: ")
+    login_pw = input("Enter your password: ")
+    cust = bank.authenticate(login_id, login_pw)
+
+    if cust:
+        while True:
+            print("\nWhat do you want to do?")
+            print("1. Deposit")
+            print("2. Withdraw")
+            print("3. Transfer Internal (checking <-> savings)")
+            print("4. Transfer External (to another customer)")
+            print("5. Logout")
+            choice = input("Enter choice (1-5):")
+
+            if choice == "1":
+                acc_type = input("Deposit to 'checking' or 'savings': ").lower()
+                amount = float(input("Amount to deposit: "))
+                if acc_type == "checking":
+                    cust.checking.deposit(amount)
+                else:
+                    cust.savings.deposit(amount)
+
+            elif choice == "2":
+                acc_type = input("Withdraw from 'checking' or 'savings': ").lower()
+                amount = float(input("Amount to withdraw: "))
+                if acc_type == "checking":
+                    cust.checking.withdraw(amount)
+                else:
+                    cust.savings.withdraw(amount)
+
+            elif choice == "3":
+                from_acc = input("Transfer from 'checking' or 'savings': ").lower()
+                to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                amount = float(input("Amount to transfer: "))
+                bank.transfer_internal(cust, from_acc, to_acc, amount)
+
+            elif choice == "4":
+                to_id = input("Enter destination account ID: ")
+                from_acc = input("Transfer from 'checking' or 'savings': ").lower()
+                to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                amount = float(input("Amount to transfer: "))
+                bank.transfer_external(cust, to_id, from_acc, to_acc, amount)
+
+            elif choice == "5":
+                cust = bank.logout(cust)
+                break
+
+            else:
+                print("Invalid choice, try again.")
