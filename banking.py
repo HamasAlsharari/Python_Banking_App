@@ -69,6 +69,25 @@ class BankSystem:
         except FileNotFoundError:
             print(f"{self.filename} not found. Please create it first.")
 
+    def save(self):
+        with open(self.filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "id", "first_name", "last_name", "password", "checking", "savings",
+                "active", "overdraft_count"
+            ])
+            writer.writeheader()
+            for cust in self.customers.values():
+                writer.writerow({
+                    "id": cust.account_id,
+                    "first_name": cust.first_name,
+                    "last_name": cust.last_name,
+                    "password": cust.password,
+                    "checking": cust.checking.balance,
+                    "savings": cust.savings.balance,
+                    "active": cust.checking.active,
+                    "overdraft_count": cust.checking.overdraft_count
+                })
+       
     def list_customers(self):
         for c in self.customers.values():
             print(c)
@@ -83,28 +102,10 @@ class BankSystem:
 
         new_cust = Customer(account_id, first_name, last_name, password, checking, savings,
                             active, overdraft_count)
-
-        with open(self.filename, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=[
-                "id", "first_name", "last_name", "password", "checking", "savings",
-                "active", "overdraft_count"
-            ])
-            if f.tell() == 0:
-                writer.writeheader()
-            writer.writerow({
-                "id": account_id,
-                "first_name": first_name,
-                "last_name": last_name,
-                "password": password,
-                "checking": checking,
-                "savings": savings,
-                "active": active,
-                "overdraft_count": overdraft_count
-            })
         self.customers[account_id] = new_cust
+        self.save()
         print(f"✅ Customer {first_name} {last_name} added successfully!")
         return new_cust
-
 
 
 # authenticate, deposit, withdraw
@@ -167,9 +168,36 @@ class BankSystem:
         self.deposit(cust, to_acc, amount)
         print(f"✅ Transferred {amount} from {from_acc} to {to_acc}")
 
+# external transfers
+    def transfer_external(self, from_cust, to_account_id, from_acc, to_acc, amount):
+        to_cust = self.customers.get(to_account_id)
+        if not to_cust:
+            print("❌ Destination account not found")
+            return
+
+        from_account = from_cust.checking if from_acc == "checking" else from_cust.savings
+
+        if amount > from_account.balance + 100:
+            print("❌ Not enough funds for this transfer")
+            return
+
+        self.withdraw(from_cust, from_acc, amount)
+
+        if not from_account.active:
+            print(f"❌ Transfer canceled: {from_acc} account of {from_cust.account_id} is deactivated due to overdraft")
+            return
+
+        self.deposit(to_cust, to_acc, amount)
+
+        print(f"✅ Transferred {amount} from {from_cust.account_id} ({from_acc}) to {to_cust.account_id}({to_acc})")
+
+
 if __name__ == "__main__":
     bank = BankSystem("bank.csv")
-    cust = bank.authenticate("20002", "H6h5m")
-    if cust:
-        bank.transfer_internal(cust, "checking", "savings", 30)
-        print("Checking:", cust.checking.balance, "Savings:", cust.savings.balance)
+    cust1 = bank.authenticate("20002", "H6h5m")
+    cust2 = bank.customers.get("10001")
+    if cust1 and cust2:
+        bank.transfer_external(cust1, "10001", "checking", "checking", 10)
+        bank.save()
+        print("Cust1 Checking:", cust1.checking.balance)
+        print("Cust2 Checking:", cust2.checking.balance)
