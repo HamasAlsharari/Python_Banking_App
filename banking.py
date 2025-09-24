@@ -151,15 +151,25 @@ class BankSystem:
                 acct.active = False
         print(f"✅ Withdraw {amount} from {account_type}. New balance: {acct.balance}")
 
-# demo 
+# internal transfers
+    def transfer_internal(self, cust, from_acc, to_acc, amount):
+        if from_acc == to_acc:
+            print("❌ Cannot tranfer to the same account") 
+            return 
+        from_account = cust.checking if from_acc == "checking" else cust.savings
+        to_account = cust.checking if to_acc == "checking" else cust.savings
+
+        if amount > from_account.balance + 100:
+            print("❌ Not enough funds for this transfer")
+            return 
+        
+        self.withdraw(cust, from_acc, amount)
+        self.deposit(cust, to_acc, amount)
+        print(f"✅ Transferred {amount} from {from_acc} to {to_acc}")
+
 if __name__ == "__main__":
     bank = BankSystem("bank.csv")
     cust = bank.authenticate("20002", "H6h5m")
     if cust:
-        print("Current State:", cust.checking, cust.savings)
-        bank.deposit(cust, "checking", 100)
-        print("After Deposit:", cust.checking, cust.savings)
-        bank.withdraw(cust, "checking", 50)
-        print("After Withdraw:", cust.checking, cust.savings)
-        cust = bank.logout(cust)
-        print("After Logout:", cust)
+        bank.transfer_internal(cust, "checking", "savings", 30)
+        print("Checking:", cust.checking.balance, "Savings:", cust.savings.balance)
