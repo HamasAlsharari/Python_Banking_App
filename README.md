@@ -14,7 +14,7 @@ transfers, and overdraft protection.
 - 💸 Withdraw and deposit money
 - 🔄 Transfer between accounts (internal & external)
 - 🔐 Overdraft protection rules
-- ✅ Bouns: Unit tests (`test_banking.py`)
+- ✅ Bonus: Unit tests (`test_banking.py`)
 
 ---
 

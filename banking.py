@@ -233,7 +233,12 @@ if __name__ == "__main__":
     bank = BankSystem("bank.csv")
 
     print("Welcome to ACME Bank!")
-    have_account = input("Do you have an account? (yes/no): ").lower()
+
+    while True:
+        have_account = input("Do you have an account? (yes/no): ").lower()
+        if have_account in ["yes", "no"]:
+            break
+        print("❌ Please answer 'yes' or 'no' only.")
 
     if have_account == "no":
         print("Let's create your account.")
@@ -244,7 +249,7 @@ if __name__ == "__main__":
         checking = float(input("Initial Checking Balance (0 if none): "))
         savings = float(input("Initial Savings Balance (0 if none): "))
         bank.add_customer(account_id, first_name, last_name, password, checking, savings)
-
+     
     print("\n--- Login ---")
     login_id = input("Enter your account ID: ")
     login_pw = input("Enter your password: ")

@@ -15,3 +15,4 @@ id,first_name,last_name,password,checking,savings,active,overdraft_count
 101,john,doe,1234,110.0,60.0,True,0
 3001,Unit,Test,pw123,100.0,50.0,True,0
 3002,New,Customer,pw123,0.0,0.0,True,0
+hhhhh,hh,99,0666,-8.0,0.0,True,0
