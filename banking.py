@@ -265,8 +265,13 @@ if __name__ == "__main__":
             print("5. Logout")
             choice = input("Enter choice (1-5):")
 
+            
             if choice == "1":
-                acc_type = input("Deposit to 'checking' or 'savings': ").lower()
+                while True:
+                    acc_type = input("Deposit to 'checking' or 'savings': ").lower()
+                    if acc_type in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
                 amount = float(input("Amount to deposit: "))
                 if acc_type == "checking":
                     cust.checking.deposit(amount)
@@ -274,7 +279,11 @@ if __name__ == "__main__":
                     cust.savings.deposit(amount)
 
             elif choice == "2":
-                acc_type = input("Withdraw from 'checking' or 'savings': ").lower()
+                while True:
+                    acc_type = input("Withdraw from 'checking' or 'savings': ").lower()
+                    if acc_type in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
                 amount = float(input("Amount to withdraw: "))
                 if acc_type == "checking":
                     cust.checking.withdraw(amount)
@@ -282,15 +291,31 @@ if __name__ == "__main__":
                     cust.savings.withdraw(amount)
 
             elif choice == "3":
-                from_acc = input("Transfer from 'checking' or 'savings': ").lower()
-                to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                while True:
+                    from_acc = input("Transfer from 'checking' or 'savings': ").lower()
+                    if from_acc in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
+                while True:
+                    to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                    if to_acc in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
                 amount = float(input("Amount to transfer: "))
                 bank.transfer_internal(cust, from_acc, to_acc, amount)
 
             elif choice == "4":
                 to_id = input("Enter destination account ID: ")
-                from_acc = input("Transfer from 'checking' or 'savings': ").lower()
-                to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                while True:
+                    from_acc = input("Transfer from 'checking' or 'savings': ").lower()
+                    if from_acc in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
+                while True:
+                    to_acc = input("Transfer to 'checking' or 'savings': ").lower()
+                    if to_acc in ["checking", "savings"]:
+                        break
+                    print("❌ Please enter 'checking' or 'savings' only.")
                 amount = float(input("Amount to transfer: "))
                 bank.transfer_external(cust, to_id, from_acc, to_acc, amount)
 
